@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GaragePro Bénin - Factures MoMo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui}
+body{background:#0f172a;color:white;padding:16px}
+.card{background:#1e293b;border-radius:16px;padding:16px;margin-bottom:16px}
+h1{font-size:22px;color:#38bdf8}
+.btn{background:#0ea5e9;color:white;border:none;padding:12px 16px;border-radius:10px;font-weight:700;width:100%;margin-top:8px}
+.btn-green{background:#22c55e}
+.btn-whatsapp{background:#25D366}
+input,select{width:100%;padding:12px;border-radius:10px;margin:8px 0;background:#0f172a;color:white;border:1px solid #334155}
+table{width:100%;margin-top:12px;border-collapse:collapse}
+th,td{padding:8px;text-align:left;font-size:13px;border-bottom:1px solid #334155}
+</style>
+</head>
+<body>
+<h1>🔧 GaragePro Bénin</h1>
+<p style="opacity:.7;margin:8px 0">CA: 52 000 FCFA • Garage AHOUNGAN</p>
+
+<div class="card">
+<h3>➕ Nouvelle Intervention</h3>
+<input id="client" placeholder="Nom client ex: Mr Paul">
+<input id="tel" placeholder="Tel ex: 97 12 34 56">
+<select id="service">
+<option>Vidange - 15000 FCFA</option>
+<option>Freins - 25000 FCFA</option>
+<option>Diagnostic - 10000 FCFA</option>
+<option>Réparation moteur - 50000 FCFA</option>
+</select>
+<button class="btn" onclick="ajouter()">Enregistrer + Facture</button>
+</div>
+
+<div class="card">
+<h3>📊 Dernières interventions</h3>
+<table id="liste">
+<tr><th>Client</th><th>Service</th><th>Action</th></tr>
+</table>
+</div>
+
+<div id="facture" class="card" style="display:none"></div>
+
+<script>
+let interventions = JSON.parse(localStorage.getItem('garage')||'[]');
+function render(){
+ let html='<tr><th>Client</th><th>Service</th><th>Action</th></tr>';
+ interventions.forEach((it,i)=>{
+  html+=`<tr><td>${it.client}</td><td>${it.service}</td><td><button onclick="voirFacture(${i})" style="background:#22c55e;border:none;padding:6px 10px;border-radius:6px;color:white">Facture</button></td></tr>`;
+ });
+ document.getElementById('liste').innerHTML=html;
+}
+function ajouter(){
+ let c=document.getElementById('client').value;
+ let t=document.getElementById('tel').value;
+ let s=document.getElementById('service').value;
+ if(!c) return alert('Nom client ?');
+ interventions.unshift({client:c,tel:t,service:s,date:new Date().toLocaleDateString()});
+ localStorage.setItem('garage',JSON.stringify(interventions));
+ render(); voirFacture(0);
+ document.getElementById('client').value='';document.getElementById('tel').value='';
+}
+function voirFacture(i){
+ let it=interventions[i];
+ let prix=it.service.match(/(\d+) FCFA/); prix=prix?prix[1]:'15000';
+ let f=document.getElementById('facture');
+ f.style.display='block';
+ f.innerHTML=`
+ <h3>🧾 Facture Garage AHOUNGAN</h3>
+ <p>Client: <b>${it.client}</b><br>Tel: ${it.tel}<br>Date: ${it.date}</p>
+ <p>Service: ${it.service}<br><b>Total: ${prix} FCFA</b></p>
+ <button class="btn btn-green" onclick="payer('${prix}','${it.client}')">💰 Payer via MoMo</button>
+ <button class="btn" style="background:#25D366" onclick="whatsapp('${it.tel}','${it.client}','${prix}')">📲 Envoyer Facture WhatsApp</button>
+ <button class="btn" onclick="window.print()">🖨️ Imprimer / PDF</button>
+ `;
+ window.scrollTo(0,9999);
+}
+function whatsapp(tel,client,prix){
+ let msg=`Bonjour ${client}, Garage AHOUNGAN: Votre facture de ${prix} FCFA est prête. Merci! 🔧`;
+ let url=`https://wa.me/229${tel.replace(/\s/g,'')}?text=${encodeURIComponent(msg)}`;
+ window.open(url,'_blank');
+}
+function payer(prix,client){ let num=prompt('Numéro MoMo ?'); if(num) alert('Paiement '+prix+' FCFA demandé à '+num); }
+render();
+</script>
+</body>
+</html>
