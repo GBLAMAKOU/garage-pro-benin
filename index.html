@@ -54,4 +54,9 @@
 </div>
 
 <script>
+<!-- Compteur vues -->
+<div id="garage-views" style="position:fixed;bottom:15px;left:15px;background:#0f172a;color:white;padding:10px 15px;border-radius:25px;font-size:13px;z-index:999999">👀 <span id="v-count">1</span> vues</div>
+<script>fetch('https://api.countapi.xyz/hit/garage-pro-benin-2026/visites').then(r=>r.json()).then(d=>{document.getElementById('v-count').innerText=d.value})</script>
+</body>
+</html>
 function payer(m,f){let e=new Date();e.setDate(e.getDate()+30);localStorage.setItem('garage_abo',JSON.stringify({plan:f,prix:m,expiry:e.toISOString()}));alert('Paiement simulé OK! Abonnement '+f.toUpperCase()+' activé 30j. FedaPay va s
