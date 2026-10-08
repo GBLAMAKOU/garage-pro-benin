@@ -82,6 +82,24 @@ function whatsapp(tel,client,prix){
 }
 function render(){ document.getElementById('app').innerHTML=`<div class="card"><h3>Gestion Garage</h3><p>Ton app fonctionne ici avec limite SaaS</p><button class="btn" onclick="payer(15000,'Client Test')">Tester Payer 15.000F</button><button class="btn" style="background:#25D366" onclick="whatsapp('97000000','Client Test',15000)">Tester WhatsApp</button><button class="btn" style="background:#eee;color:#000" onclick="localStorage.clear();location.reload()">Reset Essai (test)</button></div>`; }
 checkAbo(); render(); setInterval(checkAbo,60000);
+<div id="paywall" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.93);z-index:99999;align-items:center;justify-content:center;padding:20px">
+<div style="background:#fff;border-radius:20px;padding:25px;max-width:400px;width:100%;text-align:center">
+<h2 style="margin:0 0 10px">🚀 Essai terminé</h2>
+<p>Ton atelier a généré <b>52 000 FCFA</b>. Continue avec GaragePro !</p>
+<div style="border:2px solid #f59e0b;border-radius:12px;padding:15px;margin:15px 0">
+<b>STARTER - Le plus choisi</b><br><span style="font-size:24px;font-weight:bold">5 000 FCFA</span>/mois<br><small>100 clients • Factures MoMo • Relances WhatsApp</small><br><br>
+<button onclick="payer(5000,'starter')" style="background:#f59e0b;width:100%;padding:12px;border:none;border-radius:8px;font-weight:bold">Payer avec MoMo</button>
+</div>
+<div style="border:1px solid #ddd;border-radius:12px;padding:12px">
+<b>PRO</b> - 12 000 FCFA/mois - Illimité<br>
+<button onclick="payer(12000,'pro')" style="background:#0f172a;color:#fff;width:100%;padding:10px;border:none;border-radius:8px;margin-top:8px">Passer PRO</button>
+</div>
+<p style="font-size:11px;color:#666;margin-top:12px">Paiement sécurisé Fedapay - MTN / Moov / Wave</p>
+</div></div>
+<script>
+function payer(montant,plan){let e=new Date();e.setDate(e.getDate()+30);localStorage.setItem('garage_abo',JSON.stringify({plan:plan,prix:montant,expiry:e.toISOString()}));alert('Paiement simulé OK ! Dans la vraie version Fedapay va s ouvrir ici. Abonnement '+plan+' activé.');document.getElementById('paywall').style.display='none';location.reload()}
+(function(){let s=localStorage.getItem('garage_abo');if(!s){let e=new Date();e.setDate(e.getDate()+7);localStorage.setItem('garage_abo',JSON.stringify({plan:'essai',expiry:e.toISOString()}));s=localStorage.getItem('garage_abo')}let a=JSON.parse(s);let now=new Date();let exp=new Date(a.expiry);let days=Math.ceil((exp-now)/86400000);let b=document.createElement('div');b.style.cssText='position:fixed;top:12px;right:12px;background:#0f172a;color:#fff;padding:8px 14px;border-radius:30px;z-index:9999;font-size:13px;display:flex;gap:8px;align-items:center;box-shadow:0 4px 12px rgba(0,0,0,.3)';if(now>exp){document.getElementById('paywall').style.display='flex';b.innerHTML='⛔ Essai fini <button onclick=document.getElementById("paywall").style.display="flex" style="background:#f59e0b;border:none;padding:4px 10px;border-radius:10px;margin-left:6px;font-weight:bold">Payer</button>'}else{b.innerHTML=(a.plan==='essai'?'🎁 Essai '+days+'j restants':'✅ '+a.plan+' • '+days+'j')+' <button onclick=document.getElementById("paywall").style.display="flex" style="background:#f59e0b;border:none;padding:4px 10px;border-radius:10px;margin-left:6px;font-weight:bold">Pro</button>'}document.body.appendChild(b)})();
+</script>
 </script>
 </body>
 </html>
