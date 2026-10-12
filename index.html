@@ -1,148 +1,43 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GaragePro Bénin - SaaS Gestion Garage</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');body{font-family:'Inter',sans-serif}</style>
-</head>
-<body class="bg-slate-50">
-
-<!-- 1. ECRAN LOGIN - S'OUVRE DES LE DEBUT -->
-<div id="login-screen" style="display:flex;position:fixed;inset:0;background:rgba(15,23,42,.97);z-index:999999;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:20px;padding:24px;max-width:380px;width:100%;text-align:center">
-    <div style="width:50px;height:50px;background:#0f172a;color:white;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;margin:0 auto">G</div>
-    <h2 style="color:#0f172a;font-size:22px;font-weight:900;margin-top:12px;">GaragePro Bénin</h2>
-    <p style="margin:8px 0 18px;color:#475569;font-size:13px;">Connectez-vous à votre garage</p>
-    <input id="login-email" type="email" placeholder="Email (ex: atelier@gmail.com)" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px">
-    <input id="login-pass" type="password" placeholder="Mot de passe" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:14px">
-    <button onclick="doLogin()" style="width:100%;background:#facc15;padding:12px;border-radius:10px;border:none;font-weight:900">Se connecter →</button>
-    <p id="login-error" style="color:red;font-size:12px;margin-top:10px;display:none"></p>
-    <p style="font-size:11px;color:#94a3b8;margin-top:14px">Démo: demo@garage.bj / demo1234</p>
-  </div>
-</div>
-
-<!-- 2. PAYWALL MOMO (après login si pas payé) -->
-<div id="paywall" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.93);z-index:99998;align-items:center;justify-content:center;padding:20px">
-  <div style="background:#fff;border-radius:20px;padding:22px;max-width:380px;width:100%;text-align:center">
-    <h2 style="color:#0f172a;font-size:22px;font-weight:900;">🔒 Essai terminé</h2>
-    <p style="margin:10px 0;color:#475569;">Payez 5 000 FCFA / mois pour continuer</p>
-    <div style="background:#0f172a;color:white;padding:15px;border-radius:12px;margin:15px 0;">
-      <p style="margin:0;font-size:12px;color:#94a3b8;">MTN MoMo Bénin</p>
-      <p style="font-size:28px;font-weight:900;color:#FFD700;letter-spacing:2px;margin:5px 0;">01 53 43 65 98</p>
-      <p style="font-size:12px;">GBLAMAKOU Alain</p>
-    </div>
-    <p style="font-size:12px;color:#64748b;text-align:left;">1. Tapez *880#<br>2. Envoyez 5000F au 01 53 43 65 98<br>3. Entrez le code</p>
-    <div style="margin-top:15px;">
-      <input id="codeInput" placeholder="Code après paiement MoMo" style="width:100%;padding:12px;border:1px solid #e2e8f0;border-radius:8px;text-align:center;font-weight:700;">
-      <button onclick="unlockApp()" style="width:100%;margin-top:8px;background:#0f172a;color:white;padding:12px;border-radius:8px;border:none;font-weight:800;">🔓 Débloquer</button>
-      <a href="https://wa.me/2290153436598?text=Bonjour%20Alain%20j'ai%20payé%205000F" style="display:block;text-align:center;margin-top:10px;font-size:13px;color:#059669;font-weight:700;">📲 Envoyer preuve sur WhatsApp</a>
-    </div>
-    <p style="font-size:10px;color:#94a3b8;margin-top:10px;">Activation en 5 min après vérification</p>
-    <div style="border:2px solid #f59e0b;border-radius:14px;padding:14px;margin:18px 0;background:#fffbeb;text-align:left">
-      <b>STARTER - Le plus choisi</b><br><span style="font-size:26px;font-weight:900">5 000 FCFA</span>/mois<br><small>100 clients • Factures MoMo • Relances WhatsApp auto</small><br><br>
-      <button onclick="payer(5000,'starter')" style="background:#f59e0b;width:100%;padding:12px;border:none;border-radius:8px;font-weight:800">Payer avec Mobile Money</button>
-    </div>
-    <div style="border:1px solid #ddd;border-radius:12px;padding:10px;text-align:left"><b>PRO 12 000 FCFA/mois</b><br><small>Clients et factures illimités</small><br><button onclick="payer(12000,'pro')" style="background:#0f172a;color:#fff;width:100%;padding:10px;border:none;border-radius:8px;margin-top:6px">Pass PRO</button></div>
-    <button onclick="logout()" style="margin-top:12px;border:none;background:none;color:#64748b;text-decoration:underline;font-size:12px">Se déconnecter</button>
-  </div>
-</div>
-
-<!-- 3. APP PRINCIPALE -->
-<header class="bg-slate-900 text-white px-4 py-3 flex justify-between items-center sticky top-0 z-40">
-  <div class="flex gap-2 items-center"><div class="bg-white text-slate-900 w-8 h-8 rounded-lg flex items-center justify-center font-black">G</div><div><div class="font-black text-sm">GaragePro</div><div class="text-[10px] text-amber-400 font-bold">ATELIER • Bénin</div></div></div>
-  <div class="text-right"><div class="text-[10px] text-slate-400">Connecté</div><div id="user-display" class="text-xs font-bold">Atelier AHOUNGAN</div><button onclick="logout()" class="text-[10px] text-amber-400 underline">Déconnexion</button></div>
-</header>
-
-<div class="p-4 max-w-6xl mx-auto space-y-3">
-  <div class="grid grid-cols-2 gap-3">
-    <div class="bg-white rounded-2xl p-4 shadow-sm border"><div class="text-[11px] text-slate-500 font-bold">CA TOTAL</div><div class="text-2xl font-black mt-1">52 000 <span class="text-sm">FCFA</span></div><div class="text-[11px] text-emerald-600 mt-1">▲ 12% ce mois</div></div>
-    <div class="bg-white rounded-2xl p-4 shadow-sm border"><div class="text-[11px] text-slate-500 font-bold">BÉNÉFICE NET</div><div class="text-2xl font-black text-emerald-600 mt-1">27 000 <span class="text-sm">FCFA</span></div></div>
-    <div class="bg-white rounded-2xl p-4 shadow-sm border"><div class="text-[11px] text-slate-500 font-bold">CLIENTS</div><div class="text-2xl font-black mt-1">18</div></div>
-    <div class="bg-white rounded-2xl p-4 shadow-sm border"><div class="text-[11px] text-slate-500 font-bold">INTERVENTIONS</div><div class="text-2xl font-black mt-1">24</div></div>
-  </div>
-  <div class="bg-white rounded-2xl p-4 shadow-sm border"><div class="font-bold text-sm mb-2">Top 5 des clients</div><div class="text-xs space-y-1"><div class="flex justify-between"><span>Adjovi Kokou</span><b>15 000</b></div><div class="flex justify-between"><span>Fatima Alassane</span><b>12 000</b></div><div class="flex justify-between"><span>Jean Koffi</span><b>9 500</b></div><div class="flex justify-between"><span>Moussa Traoré</span><b>8 000</b></div></div></div>
-  <div class="bg-white rounded-2xl p-4 shadow-sm border"><div class="font-bold text-sm mb-2 flex justify-between"><span>Dernières interventions</span><span class="text-amber-500 text-xs cursor-pointer" onclick="alert('Nouvelle intervention')">+ Nouvelle</span></div><div class="text-xs"><div class="flex justify-between py-2 border-b"><span>Vidange + Filtre - Adjovi</span><b>15 000 FCFA</b></div><div class="flex justify-between py-2 border-b"><span>Freinage complet - Fatima</span><b>22 000 FCFA</b></div><div class="flex justify-between py-2"><span>Diagnostic - Jean</span><b>5 000 FCFA</b></div></div></div>
-</div>
-
-<div id="garage-views" style="position:fixed;bottom:15px;left:15px;background:#0f172a;color:white;padding:10px 15px;border-radius:25px;font-size:13px;z-index:999">👀 <span id="v-count">1</span> vues</div>
-
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>GaragePro Bénin</title><script src="https://cdn.tailwindcss.com"></script></head><body style="background:#0f172a;margin:0;font-family:sans-serif">
+<div id="login-screen" style="position:fixed;inset:0;background:#0f172a;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px">
+<div style="background:white;border-radius:24px;padding:28px;width:100%;max-width:360px;text-align:center;color:#0f172a">
+<div style="width:56px;height:56px;background:#facc15;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto;font-weight:900;font-size:22px">G</div>
+<h1 style="font-weight:900;font-size:22px;margin:12px 0 4px">GaragePro Bénin</h1>
+<p style="font-size:13px;color:#64748b;margin-bottom:20px">Connectez-vous à votre garage</p>
+<input id="l-email" type="email" placeholder="demo@garage.bj" value="demo@garage.bj" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:10px">
+<input id="l-pass" type="password" placeholder="Mot de passe" value="demo1234" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:8px">
+<div id="l-error" style="display:none;color:red;font-size:12px;background:#fef2f2;padding:8px;border-radius:8px;margin-bottom:8px"></div>
+<button id="btn-login" style="width:100%;background:#facc15;color:#0f172a;font-weight:900;padding:14px;border-radius:12px;border:none">Se connecter →</button>
+<p style="font-size:11px;color:#94a3b8;margin-top:12px">demo@garage.bj / demo1234<br>n'importe quel email + mdp 4 lettres</p>
+</div></div>
+<div id="paywall" style="position:fixed;inset:0;background:#0f172a;z-index:99998;display:none;align-items:center;justify-content:center;padding:16px">
+<div style="background:white;border-radius:24px;padding:28px;width:100%;max-width:360px;text-align:center;color:#0f172a">
+<div style="font-size:36px">🔒</div><h2 style="font-weight:900;font-size:20px;margin-top:8px">Abonnement requis</h2>
+<div style="background:#f8fafc;border-radius:12px;padding:12px;margin-top:12px;text-align:left;font-size:13px">
+<div style="display:flex;justify-content:space-between"><span>Montant:</span><b>5 000 FCFA / mois</b></div>
+<div style="display:flex;justify-content:space-between;margin-top:6px"><span>MTN MoMo:</span><b style="color:#ca8a04">01 53 43 65 98</b></div>
+<div style="display:flex;justify-content:space-between"><span>Nom:</span><b>GBLA MAKOU</b></div></div>
+<input id="lic-key" placeholder="Clé: DEMO-GRATUIT-7J" style="width:100%;border:1px solid #e2e8f0;border-radius:12px;padding:12px;margin-top:12px">
+<div id="p-error" style="display:none;color:red;font-size:12px;background:#fef2f2;padding:8px;border-radius:8px;margin-top:8px"></div>
+<button id="btn-activate" style="width:100%;background:#0f172a;color:white;font-weight:700;padding:14px;border-radius:12px;border:none;margin-top:10px">Débloquer mon garage</button>
+<p style="font-size:11px;color:#94a3b8;margin-top:10px">Clés test: DEMO-GRATUIT-7J<br>GBLA-5000-2026</p>
+</div></div>
+<div id="app" style="display:none;min-height:100vh;background:#f1f5f9;color:#0f172a;padding:20px">
+<div style="background:white;border-radius:16px;padding:20px"><h1 style="font-weight:900">Tableau de bord</h1><p>Bienvenue <span id="user-display"></span> ! Votre garage est débloqué.</p>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+<div style="background:#1e293b;color:white;border-radius:12px;padding:12px"><div style="font-size:10px">CA TOTAL</div><div style="font-weight:900">25 000 FCFA</div></div>
+<div style="background:#1e293b;color:white;border-radius:12px;padding:12px"><div style="font-size:10px">BÉNÉFICE</div><div style="font-weight:900">13 000 FCFA</div></div>
+</div><button id="btn-logout" style="margin-top:20px;font-size:12px;color:#64748b;text-decoration:underline;background:none;border:none">Déconnexion</button></div></div>
 <script>
-// CONFIG SUPABASE - MET TES CLES ICI SI TU AS SUPABASE, SINON CA MARCHE EN LOCAL
-const SUPABASE_URL = "";
-const SUPABASE_KEY = "";
-let supabaseClient = null;
-if(SUPABASE_URL && SUPABASE_KEY){ supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
-
-function doLogin(){
-  const email = document.getElementById('login-email').value.trim();
-  const pass = document.getElementById('login-pass').value.trim();
-  const err = document.getElementById('login-error');
-  if(!email ||!pass){ err.style.display='block'; err.innerText='Remplis email et mot de passe'; return; }
-
-  if(supabaseClient){
-    supabaseClient.auth.signInWithPassword({email, password:pass}).then(({data,error})=>{
-      if(error){ err.style.display='block'; err.innerText=error.message; }
-      else { localStorage.setItem('garage_user', email); afterLogin(email); }
-    });
-  } else {
-    // MODE DEMO SANS SUPABASE
-    if((email==='demo@garage.bj' && pass==='demo1234') || pass.length>=4){
-      localStorage.setItem('garage_user', email);
-      afterLogin(email);
-    } else { err.style.display='block'; err.innerText='Mot de passe trop court (min 4)'; }
-  }
-}
-
-function afterLogin(email){
-  document.getElementById('user-display').innerText = email.split('@')[0];
-  document.getElementById('login-screen').style.display='none';
-  checkPaywall();
-}
-
-function checkPaywall(){
-  const paid = localStorage.getItem('garagePaid');
-  const abo = JSON.parse(localStorage.getItem('garage_abo')||'null');
-  const valid = paid==='yes' || (abo && new Date(abo.expiry) > new Date());
-  if(!valid){
-    document.getElementById('paywall').style.display='flex';
-  } else {
-    document.getElementById('paywall').style.display='none';
-  }
-}
-
-function unlockApp(){
-  const code = document.getElementById('codeInput').value.trim();
-  if(code==='GBLA-5000-2026'){
-    localStorage.setItem('garagePaid','yes');
-    alert('✅ Validé! 30 jours activés');
-    document.getElementById('paywall').style.display='none';
-  } else { alert('❌ Code faux - envoie preuve sur WhatsApp'); }
-}
-
-function payer(m,f){
-  let e=new Date(); e.setDate(e.getDate()+30);
-  localStorage.setItem('garage_abo', JSON.stringify({plan:f, prix:m, expiry:e.toISOString()}));
-  localStorage.setItem('garagePaid','yes');
-  alert('Paiement simulé OK! Abonnement '+f.toUpperCase()+' activé 30j. FedaPay à brancher ensuite');
-  document.getElementById('paywall').style.display='none';
-}
-
-function logout(){
-  localStorage.removeItem('garage_user');
-  if(supabaseClient) supabaseClient.auth.signOut();
-  location.reload();
-}
-
-// Au chargement, vérifie si déjà connecté
-window.onload = ()=>{
-  const user = localStorage.getItem('garage_user');
-  if(user){ afterLogin(user); }
-  // Compteur vues
-  fetch('https://api.countapi.xyz/hit/garage-pro-benin-2026/visites').then(r=>r.json()).then(d=>{document.getElementById('v-count').innerText=d.value}).catch(()=>{document.getElementById('v-count').innerText='127'});
-};
-</script>
-</body>
-</html>
+const KEYS=["GBLA-5000-2026","DEMO-GRATUIT-7J","GARAGE-PRO-2026","TEST-5000"];
+function check(){
+const u=localStorage.getItem('garage_user');const l=localStorage.getItem('garage_license');
+const login=document.getElementById('login-screen');const pay=document.getElementById('paywall');const app=document.getElementById('app');
+if(!u){login.style.display='flex';pay.style.display='none';app.style.display='none';return}
+document.getElementById('user-display').textContent=u;
+if(!l||!KEYS.includes(l)){login.style.display='none';pay.style.display='flex';app.style.display='none';return}
+login.style.display='none';pay.style.display='none';app.style.display='block';}
+document.getElementById('btn-login').onclick=()=>{const e=document.getElementById('l-email').value.trim();const p=document.getElementById('l-pass').value.trim();const err=document.getElementById('l-error');if(!e||p.length<4){err.textContent='Email + mdp 4 lettres mini';err.style.display='block';return}err.style.display='none';localStorage.setItem('garage_user',e);check();};
+document.getElementById('btn-activate').onclick=()=>{const k=document.getElementById('lic-key').value.trim().toUpperCase();const err=document.getElementById('p-error');if(!KEYS.includes(k)){err.textContent='Clé invalide. Essaie DEMO-GRATUIT-7J';err.style.display='block';return}err.style.display='none';localStorage.setItem('garage_license',k);check();};
+document.getElementById('btn-logout').onclick=()=>{localStorage.clear();location.reload();};check();
+</script></body></html>
